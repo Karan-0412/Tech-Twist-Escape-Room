@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+        body {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            background: #000000;
+            color: #FF3333;
+            font-size: 50px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        #event-title {
+            font-size: 45px;
+            font-weight: bold;
+            color: #FFFF00;
+            margin-bottom: 10px;
+        }
+        #society-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #society-logo {
+            width: 60px;
+            height: auto;
+            background-image:url("logo.png");
+            transform : scale(1.25);
+        }
+        #society-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFFFFF;
+            text-transform: uppercase;
+        }
+        #timer {
+            font-size: 130px;
+            font-weight: bold;
+            transition: transform 0.5s ease-in-out;
+            text-shadow: 0 0 20px #FF3333;
+        }
+        .warning {
+            animation: flash 0.5s infinite alternate;
+        }
+        @keyframes flash {
+            from { background-color: #000000; color: #FF3333; }
+            to { background-color: #B22222; color: #FFFF00; }
+        }
+        .boom {
+            font-size: 160px;
+            color: #FFFFFF;
+            animation: explode 1s infinite alternate;
+        }
+        @keyframes explode {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+        #code-input-container {
+            margin-top: 20px;
+        }
+        #code-input {
+            font-size: 25px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            -webkit-text-security: disc;
+        }
+        #start-button, #reset-button {
+            font-size: 25px;
+            padding: 10px 20px;
+            /* margin-top: ; */
+            margin : 10px auto;
+            cursor: pointer;
+            background-color: #FF3333;
+            color: #FFFFFF;
+            border: solid 1px rgba(255, 255, 255, 0.917);
+            border-radius: 5px;
+        }
+        #reset-button {
+            background-color: #000000;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size:20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="event-title">Tech Twist: Escape Room</div>
+    <div id="timer">30:00</div>
+    <div id="code-input-container">
+        <input type="text" id="code-input" placeholder="Enter Code">
+        <button id="start-button">Start Timer</button>
+    </div>
+    <button id="reset-button">Reset Timer</button>
+    <div id="society-container">
+        <img id="society-logo" src="logo.png" alt="Society Logo">
+        <div id="society-name">Apex Techno Warriors</div>
+    </div>
+    <audio id="tickSound" src="tick.mp3"></audio>
+    <audio id="alarmSound" src="alarm.mp3"></audio>
+    <script>
+        let timerElement = document.getElementById('timer');
+let tickSound = document.getElementById('tickSound');
+let alarmSound = document.getElementById('alarmSound');
+let countdown;
+let countdownStarted = false;
+const correctCode = "1234";
+const resetCode = "4321";
+let timeLeft = localStorage.getItem("timeLeft") ? parseInt(localStorage.getItem("timeLeft")) : 1800;
+
+// Function to update the timer display
+function updateTimerDisplay() {
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Function to start the countdown
+function startCountdown() {
+    if (countdownStarted) return; // Prevent multiple timers
+    countdownStarted = true;
+    
+    // Hide input fields after correct code entry
+    document.getElementById('code-input-container').style.display = 'none';
+    document.getElementById('start-button').style.display = 'none';
+
+    countdown = setInterval(() => {
+        if (timeLeft <= 0) {
+            clearInterval(countdown);
+            timerElement.textContent = "Game Over!";
+            timerElement.classList.add('boom');
+            document.body.classList.add('warning');
+            alarmSound.play();
+            localStorage.removeItem("timeLeft");
+            localStorage.removeItem("timerStarted");
+            countdownStarted = false;
+            return;
+        }
+        
+        if (timeLeft === 120) {
+            document.body.classList.add('warning');
+        }
+
+        if (timeLeft % 5 === 0) {
+            tickSound.play();
+            timerElement.style.transform = "scale(1.3)";
+            setTimeout(() => timerElement.style.transform = "scale(1)", 200);
+        }
+
+        timeLeft--;
+        localStorage.setItem("timeLeft", timeLeft);
+        updateTimerDisplay();
+    }, 1000);
+}
+
+// Function to reset the timer
+function resetTimer() {
+    let enteredResetCode = prompt("Enter Reset Code:");
+    
+    if (enteredResetCode === resetCode) {
+        clearInterval(countdown); // Stop the existing timer
+        countdownStarted = false; // Allow restarting
+        timeLeft = 1800; // Reset to 30:00
+        localStorage.removeItem("timeLeft");
+        localStorage.removeItem("timerStarted");
+
+        updateTimerDisplay();
+        document.body.classList.remove('warning');
+        timerElement.classList.remove('boom');
+        
+        document.getElementById('code-input-container').style.display = 'block'; // Show input again
+        document.getElementById('start-button').style.display = 'block'; // Show start button again
+        document.getElementById('code-input').value = ""; // Clear previous input
+
+        alert("Timer has been reset. Enter the code to start again.");
+    } else {
+        alert("Incorrect Reset Code!");
+    }
+}
+
+// On window load, check if the timer should continue
+window.onload = function () {
+    if (localStorage.getItem("timerStarted") === "true" && timeLeft > 0) {
+        startCountdown();
+    } else {
+        updateTimerDisplay();
+    }
+};
+
+// Start button click event
+document.getElementById('start-button').addEventListener('click', () => {
+    let enteredCode = document.getElementById('code-input').value;
+    if (enteredCode === correctCode) {
+        localStorage.setItem("timerStarted", "true");
+        startCountdown();
+    } else {
+        alert("Incorrect Code!");
+    }
+});
+
+// Reset button click event
+document.getElementById('reset-button').addEventListener('click', resetTimer);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech Twist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: "Orbitron", sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+        background: #000814;
+        color: #fff;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 32px;
+        margin-bottom: 15px;
+        color: #ffcc00;
+        /* text-shadow: 0 0 15px rgba(255, 204, 0, 0.8); */
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 400px;
+        margin: auto;
+        background: #001d3d;
+        padding: 20px;
+        /* border:  2px solid white; */
+        border-radius: 10px;
+        backdrop-filter: blur(8px);
+        /* box-shadow: 0 2px 10px #2926c6; */
+
+        /* box-shadow: 0 8px 20px rgba(255, 204, 0, 0.3); */
+      }
+
+      /* Theme selection dropdown */
+      .theme-select {
+        font-size: 18px;
+        padding: 10px;
+        width: 100%;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        background: #fffcf9;
+        color: black;
+        backdrop-filter: blur(8px);
+
+      }
+
+      .team {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+        /* From https://css.glass */
+        /* From https://css.glass */
+        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(2.7px);
+        -webkit-backdrop-filter: blur(2.7px);
+        border: 1px solid rgba(255, 255, 255, 0.84);
+        border-radius: 10px;
+      }
+      .team span {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #ffffff;
+      }
+
+      /* Stylish input fields */
+      input {
+        width: 80%;
+        padding: 10px;
+        font-size: 20px;
+        text-align: center;
+        border: none;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background: whitesmoke;
+        color: white;
+        outline: none;
+        /* transition: 0.3s; */
+      }
+
+      input:focus {
+        border: 1px solid white;
+        background: #1c2537;
+        /* transform: scale(1.05); */
+      }
+
+      /* Animated buttons */
+      button {
+        width: 50%;
+        padding: 10px;
+        font-size: 16px;
+        border: none;
+        background: #ef476f;
+        color: #fff;
+        border-radius: 8px;
+        cursor: pointer;
+        /* transition: 0.3s; */
+        font-weight: bold;
+      }
+
+      button:hover {
+        background: #a82342;
+        transition: 0.5s;
+      }
+
+      /* Success animation */
+      .success {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2ecc71;
+        animation: fadeIn 0.5s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      label {
+        font-size: large;
+      }
+    </style>
+  </head>
+  <body>
+
+    <body>
+    <h1>Tech Twist: Escape Room</h1>
+
+    <div class="container">
+      <label for="theme">Select Theme:</label>
+      <select id="theme" class="theme-select" onchange="loadTeams()">
+        <option value="">-- Choose Theme --</option>
+        <option value="museum">Heist at the Museum</option>
+        <option value="spy">Secret Agent Mission</option>
+        <option value="time">Time Travelers</option>
+        <option value="pirate">Pirate's Treasure Hunt</option>
+        <option value="alien">Alien Invasion</option>
+        <option value="detective">Detective Mystery</option>
+      </select>
+    </div>
+
+    <div class="container" id="teams"></div>
+
+    <!-- Confetti Effect -->
+    <canvas id="confettiCanvas"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0"></script>
+
+    <script>
+      // Define correct codes for each theme
+      const themeCodes = {
+        museum: { 1: "1234", 2: "5678", 3: "91011", 4: "121314" },
+        spy: { 1: "4321", 2: "8765", 3: "11109", 4: "414121" },
+        time: { 1: "2468", 2: "1357", 3: "9876", 4: "6543" },
+        pirate: { 1: "7788", 2: "8899", 3: "9900", 4: "1100" },
+        alien: { 1: "5555", 2: "6666", 3: "7777", 4: "8888" },
+        detective: { 1: "9999", 2: "0000", 3: "1122", 4: "3344" },
+      };
+
+      function loadTeams() {
+        const selectedTheme = document.getElementById("theme").value;
+        const teamsContainer = document.getElementById("teams");
+
+        teamsContainer.innerHTML = "";
+
+        if (selectedTheme) {
+          for (let i = 1; i <= 4; i++) {
+            let teamDiv = document.createElement("div");
+            teamDiv.className = "team";
+            teamDiv.id = `team${i}`;
+
+            if (
+              localStorage.getItem(`${selectedTheme}-team${i}`) === "escaped"
+            ) {
+              teamDiv.innerHTML = `<div class="success">🎉 Team ${String.fromCharCode(
+                64 + i
+              )} escaped successfully!</div>`;
+            } else {
+              teamDiv.innerHTML = `
+                            <span>Team ${String.fromCharCode(64 + i)}</span>
+                            <input type="text" id="code${i}" placeholder="Enter code">
+                            <button onclick="checkCode(${i}, '${selectedTheme}')">Submit</button>
+                        `;
+            }
+
+            teamsContainer.appendChild(teamDiv);
+          }
+        }
+      }
+
+      function checkCode(team, theme) {
+        let inputField = document.getElementById(`code${team}`);
+        let enteredCode = inputField.value.trim();
+
+        if (enteredCode === themeCodes[theme][team]) {
+          document.getElementById(
+            `team${team}`
+          ).innerHTML = `<div class="success">🏃🏻 Team ${String.fromCharCode(
+            64 + team
+          )} escaped successfully!</div>`;
+          localStorage.setItem(`${theme}-team${team}`, "escaped");
+
+          // Party Buster Confetti Effect
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#ffcc00", "#ff6f61", "#2ecc71", "#3498db", "#9b59b6"],
+          });
+        } else {
+          alert("Wrong code! Try again.");
+        }
+      }
+    </script>
+  </body>
+</html>
